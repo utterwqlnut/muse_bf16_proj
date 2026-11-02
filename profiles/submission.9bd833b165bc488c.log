@@ -1,0 +1,6 @@
+torch 2.14.1+cu130, triton 3.8.0, cuda 13.0, TMA descriptors True
+nf12 cuda: o: c0 54, 953 escapes
+nf12 cuda: pooler: c0 54, 4704 escapes
+nf12 cuda: qkv_gate: c0 54, 2533 escapes
+nf12 cuda: unpooler: c0 54, 3258 escapes
+nf12 cuda: serving [('o', 1, 8192), ('pooler', 1, 4096), ('qkv_gate', 1, 2304), ('unpooler', 1, 1024)]
