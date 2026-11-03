@@ -1,0 +1,12 @@
+torch 2.14.1+cu130, triton 3.8.0, cuda 13.0, TMA descriptors True
+nf12 cuda: o: c0 54, 949 escapes
+nf12 cuda: pooler: c0 54, 4663 escapes
+nf12 cuda: qkv_gate: c0 54, 2558 escapes
+nf12 cuda: unpooler: c0 54, 3234 escapes
+nf12 cuda: serving [('o', 1, 8192), ('pooler', 1, 4096), ('qkv_gate', 1, 2304), ('unpooler', 1, 1024)]
+tma gemm: qkv_gate m=2..8 {'wg': 2, 'cs': 4, 'stages': 11}: serving 7 of 7 m
+tma gemm: qkv_gate m=9..16 {'wg': 1, 'cs': 3, 'stages': 8}: serving 8 of 8 m
+tma gemm: qkv_gate m=17..32 {'wg': 2, 'cs': 4, 'stages': 9}: serving 16 of 16 m
+tma gemm: qkv_gate m=33..64 {'wg': 1, 'cs': 3, 'stages': 12}: serving 32 of 32 m
+tma gemm: qkv_gate m=65..128 {'wg': 1, 'cs': 3, 'stages': 8}: serving 64 of 64 m
+tma gemm: unpooler m=2..8 {'wg': 2, 'cs': 8, 'stages': 6}: serving 7 of 7 m

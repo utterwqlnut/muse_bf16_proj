@@ -1,0 +1,31 @@
+layer,m,n,k,trial,backend,params,us,us_retimed,cublas_us,current_us,x_vs_cublas,x_vs_current,status
+qkv_gate,16,2304,8192,0,cublas,{},18.4,18.96,18.336,17.152,0.9583,0.8791,ok
+qkv_gate,16,2304,8192,1,triton,"{""BLOCK_K"": 128, ""BLOCK_M"": 16, ""BLOCK_N"": 64, ""SPLIT_K"": 5, ""num_stages"": 4, ""num_warps"": 8}",17.424,17.52,18.336,17.152,1.0604,0.9728,ok
+qkv_gate,16,2304,8192,2,cuda_cluster,"{""bk"": 64, ""bm"": 16, ""bn"": 128, ""cs"": 1, ""stages"": 3, ""wm"": 1, ""wn"": 8}",70.576,,18.336,17.152,0.2153,0.1975,ok
+qkv_gate,16,2304,8192,3,cuda_cluster,"{""bk"": 64, ""bm"": 16, ""bn"": 64, ""cs"": 2, ""stages"": 3, ""wm"": 1, ""wn"": 4}",37.856,,18.336,17.152,0.4234,0.3885,ok
+qkv_gate,16,2304,8192,4,cuda_cluster,"{""bk"": 64, ""bm"": 16, ""bn"": 64, ""cs"": 4, ""stages"": 3, ""wm"": 1, ""wn"": 4}",24.96,,18.336,17.152,0.684,0.6275,ok
+qkv_gate,16,2304,8192,5,cuda_cluster,"{""bk"": 64, ""bm"": 16, ""bn"": 64, ""cs"": 8, ""stages"": 3, ""wm"": 1, ""wn"": 4}",19.072,,18.336,17.152,0.9512,0.8726,ok
+qkv_gate,16,2304,8192,6,cuda_cluster,"{""bk"": 64, ""bm"": 16, ""bn"": 128, ""cs"": 4, ""stages"": 3, ""wm"": 1, ""wn"": 8}",24.64,,18.336,17.152,0.6946,0.6372,ok
+qkv_gate,16,2304,8192,7,cuda_wgmma,"{""bk"": 64, ""bt"": 16, ""cs"": 1, ""dsw"": 0, ""stages"": 3, ""wg"": 1}",72.512,,18.336,17.152,0.2092,0.192,ok
+qkv_gate,16,2304,8192,8,cuda_wgmma,"{""bk"": 64, ""bt"": 16, ""cs"": 1, ""dsw"": 1, ""stages"": 3, ""wg"": 1}",,,18.336,17.152,,,WRONG relative L2 error 1.373e+00 > 0.01
+qkv_gate,16,2304,8192,9,cuda_wgmma,"{""bk"": 64, ""bt"": 16, ""cs"": 2, ""dsw"": 0, ""stages"": 3, ""wg"": 1}",44.272,,18.336,17.152,0.356,0.3266,ok
+qkv_gate,16,2304,8192,10,cuda_wgmma,"{""bk"": 64, ""bt"": 16, ""cs"": 4, ""dsw"": 0, ""stages"": 3, ""wg"": 1}",37.904,,18.336,17.152,0.4228,0.3879,ok
+qkv_gate,16,2304,8192,11,cuda_wgmma,"{""bk"": 64, ""bt"": 16, ""cs"": 8, ""dsw"": 0, ""stages"": 3, ""wg"": 1}",34.736,,18.336,17.152,0.4664,0.4279,ok
+qkv_gate,16,2304,8192,12,cuda_gemv,"{""ldhint"": 0, ""minb"": 1, ""rpw"": 1, ""unroll"": 4, ""warps"": 4, ""wpr"": 1, ""xldg"": 0}",62.912,,18.336,17.152,0.2433,0.2232,ok
+qkv_gate,16,2304,8192,13,cuda_gemv,"{""ldhint"": 0, ""minb"": 1, ""rpw"": 1, ""unroll"": 4, ""warps"": 4, ""wpr"": 2, ""xldg"": 0}",62.16,,18.336,17.152,0.2465,0.2261,ok
+qkv_gate,16,2304,8192,14,cuda_gemv,"{""ldhint"": 0, ""minb"": 1, ""rpw"": 1, ""unroll"": 4, ""warps"": 4, ""wpr"": 4, ""xldg"": 0}",61.824,,18.336,17.152,0.2479,0.2274,ok
+qkv_gate,16,2304,8192,15,cuda_gemv,"{""ldhint"": 2, ""minb"": 1, ""rpw"": 4, ""unroll"": 2, ""warps"": 4, ""wpr"": 1, ""xldg"": 0}",55.808,,18.336,17.152,0.2767,0.2539,ok
+qkv_gate,16,2304,8192,16,cuda_gemv,"{""ldhint"": 2, ""minb"": 1, ""rpw"": 4, ""unroll"": 2, ""warps"": 4, ""wpr"": 2, ""xldg"": 0}",58.96,,18.336,17.152,0.2608,0.2393,ok
+qkv_gate,16,2304,8192,17,triton,"{""BLOCK_K"": 128, ""BLOCK_M"": 16, ""BLOCK_N"": 64, ""SPLIT_K"": 5, ""num_stages"": 6, ""num_warps"": 8}",20.576,,18.336,17.152,0.8649,0.7934,ok
+qkv_gate,16,2304,8192,18,triton,"{""BLOCK_K"": 128, ""BLOCK_M"": 16, ""BLOCK_N"": 128, ""SPLIT_K"": 6, ""num_stages"": 4, ""num_warps"": 4}",18.432,18.288,18.336,17.152,1.0034,0.9205,ok
+qkv_gate,16,2304,8192,19,triton,"{""BLOCK_K"": 64, ""BLOCK_M"": 16, ""BLOCK_N"": 256, ""SPLIT_K"": 1, ""num_stages"": 4, ""num_warps"": 8}",50.656,,18.336,17.152,0.3073,0.2819,ok
+qkv_gate,16,2304,8192,20,triton,"{""BLOCK_K"": 256, ""BLOCK_M"": 16, ""BLOCK_N"": 64, ""SPLIT_K"": 1, ""num_stages"": 5, ""num_warps"": 4}",18.496,,18.336,17.152,0.989,0.9073,ok
+qkv_gate,16,2304,8192,21,triton,"{""BLOCK_K"": 256, ""BLOCK_M"": 16, ""BLOCK_N"": 64, ""SPLIT_K"": 7, ""num_stages"": 3, ""num_warps"": 8}",20.816,,18.336,17.152,0.8525,0.7821,ok
+qkv_gate,16,2304,8192,22,triton,"{""BLOCK_K"": 128, ""BLOCK_M"": 16, ""BLOCK_N"": 256, ""SPLIT_K"": 8, ""num_stages"": 3, ""num_warps"": 8}",20.992,,18.336,17.152,0.8437,0.774,ok
+qkv_gate,16,2304,8192,23,triton,"{""BLOCK_K"": 64, ""BLOCK_M"": 16, ""BLOCK_N"": 64, ""SPLIT_K"": 12, ""num_stages"": 5, ""num_warps"": 8}",19.312,,18.336,17.152,0.9363,0.8589,ok
+qkv_gate,16,2304,8192,24,triton,"{""BLOCK_K"": 128, ""BLOCK_M"": 16, ""BLOCK_N"": 64, ""SPLIT_K"": 4, ""num_stages"": 2, ""num_warps"": 4}",23.52,,18.336,17.152,0.7344,0.6738,ok
+qkv_gate,16,2304,8192,25,triton,"{""BLOCK_K"": 256, ""BLOCK_M"": 16, ""BLOCK_N"": 64, ""SPLIT_K"": 2, ""num_stages"": 4, ""num_warps"": 8}",18.624,,18.336,17.152,0.9803,0.8993,ok
+qkv_gate,16,2304,8192,26,triton,"{""BLOCK_K"": 128, ""BLOCK_M"": 16, ""BLOCK_N"": 256, ""SPLIT_K"": 5, ""num_stages"": 2, ""num_warps"": 8}",32.08,,18.336,17.152,0.5105,0.4684,ok
+qkv_gate,16,2304,8192,27,triton,"{""BLOCK_K"": 128, ""BLOCK_M"": 16, ""BLOCK_N"": 128, ""SPLIT_K"": 2, ""num_stages"": 4, ""num_warps"": 8}",21.28,,18.336,17.152,0.8296,0.7611,ok
+qkv_gate,16,2304,8192,28,triton,"{""BLOCK_K"": 64, ""BLOCK_M"": 16, ""BLOCK_N"": 64, ""SPLIT_K"": 5, ""num_stages"": 4, ""num_warps"": 4}",19.056,,18.336,17.152,0.9522,0.8735,ok
+qkv_gate,16,2304,8192,29,triton,"{""BLOCK_K"": 128, ""BLOCK_M"": 16, ""BLOCK_N"": 64, ""SPLIT_K"": 6, ""num_stages"": 2, ""num_warps"": 8}",20.736,,18.336,17.152,0.8566,0.7859,ok

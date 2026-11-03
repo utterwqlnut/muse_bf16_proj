@@ -16,6 +16,7 @@ kernel: BLOCK_M, BLOCK_N, BLOCK_K, SPLIT_K, num_warps, num_stages). The BF16 lay
   triton      bf16_gemm: BLOCK_M, BLOCK_N, BLOCK_K, SPLIT_K, num_warps, num_stages
   cuda_gemv   nf12_cuda_gemv (m <= 16): wpr (warps a row), warps (a block), rpw (rows a warp),
               unroll, ldhint
+The hand-written TMA kernels (TMA_DISPATCH) have their own grid sweep, sweep_cuda.py.
 Each search starts from cuBLAS, the current Triton row (BF16_CONFIGS) and the CUDA defaults;
 combinations that can't run (shared memory, empty splits, rows not whole blocks...) are pruned
 untimed. Every candidate is checked (reference.check_implementation) before it's timed and its
@@ -190,14 +191,13 @@ def sweep_shape(layer: str, m: int, trials: int, reps: int, seed: int):
                       "num_warps": [2, 4, 8, 16], "num_stages": [1, 2, 3]}
         hilo_space = {"BLOCK_M": [b for b in (16, 32, 64, 128, 256) if b <= max(16, triton.next_power_of_2(m))],
                       "BLOCK_N": [64, 128, 256], "BLOCK_K": [64, 128, 256],
-                      "SPLIT_K": [1, 2, 4, 8, 16, 32, 64], "num_warps": [4, 8], "num_stages": [2, 3, 4, 5, 6],
-                      "combine": ["atomic", "ticket"]}
+                      "SPLIT_K": [1, 2, 4, 8, 16, 32, 64], "num_warps": [4, 8], "num_stages": [2, 3, 4, 5, 6]}
         spaces = {"cublas": {}, "router_fp32": fp32_space, "router_hilo": hilo_space}
-        tile_keys = list(hilo_space)[:6]
+        tile_keys = list(hilo_space)
 
         def hilo_params(cfg):
-            """A ROUTER_HILO_TMA_CONFIGS row (6 or 7 fields) as router_hilo parameters."""
-            return {**dict(zip(tile_keys, cfg[:6])), "combine": cfg[6] if len(cfg) > 6 else "atomic"}
+            """A ROUTER_HILO_TMA_CONFIGS row as router_hilo parameters."""
+            return dict(zip(tile_keys, cfg))
 
         def why_not(backend, p):
             if backend == "router_fp32":
@@ -226,8 +226,7 @@ def sweep_shape(layer: str, m: int, trials: int, reps: int, seed: int):
                         num_warps=p["num_warps"], num_stages=p["num_stages"])
                     return out
                 return run
-            bm, bn, bk, sk, nw, ns = (p[c] for c in tile_keys)  # router_hilo, as router_hilo_tma
-            ticket = p["combine"] == "ticket"
+            bm, bn, bk, sk, nw, ns = (p[c] for c in tile_keys)  # router_hilo
             descs = state["router_descs"]
             if (bn, bk) not in descs:
                 descs[(bn, bk)] = (S.TensorDescriptor.from_tensor(state["router_hi"], [bn, bk]),
@@ -237,16 +236,11 @@ def sweep_shape(layer: str, m: int, trials: int, reps: int, seed: int):
 
             def run():
                 x_desc = S.TensorDescriptor.from_tensor(x, [bm, bk])
-                if ticket:  # partials + a ticket: no zeroing
-                    out = torch.empty((m, n), dtype=torch.float32, device=x.device)
-                    part = torch.empty((sk, m, n), dtype=torch.float32, device=x.device)
-                else:       # a zeroed output + atomics
-                    out = torch.zeros((m, n), dtype=torch.float32, device=x.device)
-                    part = out
+                out = torch.zeros((m, n), dtype=torch.float32, device=x.device)
                 S._router_hilo_tma_kernel[(triton.cdiv(m, bm), triton.cdiv(n, bn), sk)](
-                    x_desc, hi_desc, lo_desc, out, part, state["split_counts"], m, n, k_per_split,
+                    x_desc, hi_desc, lo_desc, out, m, n, k_per_split,
                     out.stride(0), out.stride(1),
-                    BLOCK_M=bm, BLOCK_N=bn, BLOCK_K=bk, TICKET=ticket, num_warps=nw, num_stages=ns)
+                    BLOCK_M=bm, BLOCK_N=bn, BLOCK_K=bk, num_warps=nw, num_stages=ns)
                 return out
             return run
 
@@ -256,7 +250,7 @@ def sweep_shape(layer: str, m: int, trials: int, reps: int, seed: int):
             cur = ("router_fp32", dict(BLOCK_N=S.ROUTER_BLOCK_N, BLOCK_K=S.ROUTER_BLOCK_K,
                                        num_warps=S.ROUTER_NUM_WARPS, num_stages=S.ROUTER_NUM_STAGES))
         else:
-            cur = ("router_hilo", hilo_params(S._router_hilo_config(m, S.ROUTER_HILO_TMA_CONFIGS)))
+            cur = ("router_hilo", hilo_params(S._router_hilo_config(m)))
         current_us = graph_us(lambda: S.router_fp32(x, W) if m <= S.ROUTER_FP32_MAX_TOKENS else S.router_hilo(x, state),
                               reps)[0]
         print(f"{tag} n={n} k={k}: SGLang {cublas_us:.2f} us, current ({cur[0]} {cur[1]}) {current_us:.2f} us; "
@@ -315,10 +309,7 @@ def sweep_shape(layer: str, m: int, trials: int, reps: int, seed: int):
         other = "router_hilo" if cur[0] == "router_fp32" else ("router_fp32" if m <= 8 else None)
         if other == "router_hilo":
             starts.append({"backend": other, **{f"router_hilo.{c}": v for c, v in
-                                                hilo_params(S._router_hilo_config(m, S.ROUTER_HILO_TMA_CONFIGS)).items()}})
-        for st in [st for st in starts if st.get("backend") == "router_hilo"]:  # and with the other combine
-            flip = "ticket" if st.get("router_hilo.combine", "atomic") == "atomic" else "atomic"
-            starts.append({**st, "router_hilo.combine": flip})
+                                                hilo_params(S._router_hilo_config(m)).items()}})
         if other == "router_fp32":
             starts.append({"backend": other, "router_fp32.BLOCK_N": S.ROUTER_BLOCK_N,
                            "router_fp32.BLOCK_K": S.ROUTER_BLOCK_K, "router_fp32.num_warps": S.ROUTER_NUM_WARPS,
